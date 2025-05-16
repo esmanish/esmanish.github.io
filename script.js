@@ -1,7 +1,7 @@
 // Initialize price calculation and UI interactions
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize with enterprise package selected
-    selectPackage('enterprise');
+    selectPackage('enterprise', false); // Added false parameter to prevent auto-scrolling on initial load
     
     // Add hover effects to summary items
     document.querySelectorAll('.summary-item').forEach(item => {
@@ -344,8 +344,9 @@ function updatePrice() {
 /**
  * Selects a package and updates UI accordingly
  * @param {string} package - The package to select ('standard', 'professional', or 'enterprise')
+ * @param {boolean} scrollToCustomizer - Whether to scroll to customizer section (default: true)
  */
-function selectPackage(package) {
+function selectPackage(package, scrollToCustomizer = true) {
     // Reset all package highlighting
     document.querySelectorAll('.package-card').forEach(card => {
         card.classList.remove('selected');
@@ -480,11 +481,13 @@ function selectPackage(package) {
         hideFinalSummary();
     }
     
-    // Always scroll to customizer section regardless of screen width
-    document.getElementById('customizer-section').scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-    });
+    // Only scroll to customizer if the parameter is true
+    if (scrollToCustomizer) {
+        document.getElementById('customizer-section').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
 }
 
 /**
