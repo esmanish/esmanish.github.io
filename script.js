@@ -1,7 +1,7 @@
 // Initialize price calculation and UI interactions
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize with enterprise package selected
-    selectPackage('enterprise');
+    // Initialize with enterprise package selected without auto-scrolling
+    selectPackage('enterprise', false);
     
     // Add hover effects to summary items
     document.querySelectorAll('.summary-item').forEach(item => {
@@ -25,6 +25,24 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target && e.target.id === 'back-to-customize-btn') {
             hideFinalSummary();
         }
+    });
+    
+    // Add event listener for view timeline button (in the final summary section)
+    document.addEventListener('click', function(e) {
+      if (e.target && (e.target.id === 'view-timeline-btn' || e.target.parentElement.id === 'view-timeline-btn')) {
+        showTimeline();
+      }
+      
+      // Handle back to summary button
+      if (e.target && (e.target.id === 'back-to-summary-btn' || e.target.parentElement.id === 'back-to-summary-btn')) {
+        hideTimeline();
+      }
+      
+      // Phase selection in timeline
+      if (e.target && e.target.classList.contains('phase')) {
+        const phase = e.target.getAttribute('data-phase');
+        showPhase(phase);
+      }
     });
 });
 
@@ -88,9 +106,11 @@ function showFinalSummary() {
     const priceBreakdownEl = document.getElementById('price-breakdown');
     priceBreakdownEl.innerHTML = '';
 
-        // Create URL with parameters for the timeline
-        const timelineURL = `timeline.html?fdp=${fdpSessions}&videos=${videoCount}&support=${supportMonths}&ai=${aiIntegration ? 1 : 0}`;
+    // Create URL with parameters for the timeline
+    const timelineURL = `timeline.html?fdp=${fdpSessions}&videos=${videoCount}&support=${supportMonths}&ai=${aiIntegration ? 1 : 0}`;
+    if (document.getElementById('view-timeline-btn')) {
         document.getElementById('view-timeline-btn').href = timelineURL;
+    }
     
     priceBreakdown.forEach(item => {
         const div = document.createElement('div');
@@ -171,7 +191,7 @@ function getSelectedFeatures() {
     // Support
     const supportMonths = parseInt(document.getElementById('support-months').value);
     if (supportMonths > 0) {
-        features.push(`${supportMonths} Month${supportMonths > 1 ? 's' : ''} Technical Support`);
+        features.push(`${supportMonths} Month${supportMonths > 1 ? 's' : ''} Tech Support`);
     }
     
     return features;
@@ -214,7 +234,7 @@ function getPriceBreakdown() {
     const supportMonths = parseInt(document.getElementById('support-months').value);
     if (supportMonths > 0) {
         const supportPrice = supportMonths * 10000;
-        breakdown.push({ name: `Technical Support (${supportMonths} month${supportMonths > 1 ? 's' : ''})`, price: supportPrice });
+        breakdown.push({ name: `Tech Support (${supportMonths} month${supportMonths > 1 ? 's' : ''})`, price: supportPrice });
     }
     
     return breakdown;
@@ -327,7 +347,7 @@ function updatePrice() {
         document.getElementById('support-item').style.display = 'flex';
         document.getElementById('support-item').innerHTML = `
             <div class="item-details">
-                <div class="item-name">Technical Support</div>
+                <div class="item-name">Tech Support</div>
                 <div class="item-description">${supportMonths} month${supportMonths > 1 ? 's' : ''} of technical assistance</div>
             </div>
         `;
@@ -352,8 +372,9 @@ function updatePrice() {
 /**
  * Selects a package and updates UI accordingly
  * @param {string} package - The package to select ('standard', 'professional', or 'enterprise')
+ * @param {boolean} scrollToCustomizer - Whether to scroll to customizer section (default: true)
  */
-function selectPackage(package) {
+function selectPackage(package, scrollToCustomizer = true) {
     // Reset all package highlighting
     document.querySelectorAll('.package-card').forEach(card => {
         card.classList.remove('selected');
@@ -488,11 +509,13 @@ function selectPackage(package) {
         hideFinalSummary();
     }
     
-    // Always scroll to customizer section regardless of screen width
-    document.getElementById('customizer-section').scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-    });
+    // Only scroll to customizer if the parameter is true
+    if (scrollToCustomizer) {
+        document.getElementById('customizer-section').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
 }
 
 /**
@@ -550,40 +573,18 @@ function selectSupport(months) {
     updatePrice();
 }
 
-// Timeline Component JavaScript Functions
-
-// Add this to your existing script.js file
-document.addEventListener('DOMContentLoaded', function() {
-    // Add event listener for view timeline button (in the final summary section)
-    document.addEventListener('click', function(e) {
-      if (e.target && (e.target.id === 'view-timeline-btn' || e.target.parentElement.id === 'view-timeline-btn')) {
-        showTimeline();
-      }
-      
-      // Handle back to summary button
-      if (e.target && (e.target.id === 'back-to-summary-btn' || e.target.parentElement.id === 'back-to-summary-btn')) {
-        hideTimeline();
-      }
-      
-      // Phase selection in timeline
-      if (e.target && e.target.classList.contains('phase')) {
-        const phase = e.target.getAttribute('data-phase');
-        showPhase(phase);
-      }
-    });
-  });
+/**
+ * Shows the timeline section with animation
+ */
+function showTimeline() {
+  // Hide the final summary section if visible
+  const finalSummarySection = document.getElementById('final-summary-section');
+  finalSummarySection.classList.remove('visible');
   
-  /**
-   * Shows the timeline section with animation
-   */
-  function showTimeline() {
-    // Hide the final summary section if visible
-    const finalSummarySection = document.getElementById('final-summary-section');
-    finalSummarySection.classList.remove('visible');
-    
-    // Add a small delay before showing the timeline
-    setTimeout(() => {
-      const timelineSection = document.getElementById('timeline-section');
+  // Add a small delay before showing the timeline
+  setTimeout(() => {
+    const timelineSection = document.getElementById('timeline-section');
+    if (timelineSection) {
       timelineSection.style.display = 'block';
       
       // Force a reflow before adding the visible class for the animation
@@ -592,24 +593,30 @@ document.addEventListener('DOMContentLoaded', function() {
       timelineSection.classList.add('visible');
       
       // Update timeline based on selected features
-      updateTimelineFeatures();
+      if (typeof updateTimelineFeatures === 'function') {
+        updateTimelineFeatures();
+      }
       
       // Initialize with planning phase
-      showPhase('planning');
+      if (typeof showPhase === 'function') {
+        showPhase('planning');
+      }
       
       // Scroll to the timeline section
       timelineSection.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
       });
-    }, 300);
-  }
-  
-  /**
-   * Hides the timeline section and shows the final summary
-   */
-  function hideTimeline() {
-    const timelineSection = document.getElementById('timeline-section');
+    }
+  }, 300);
+}
+
+/**
+ * Hides the timeline section and shows the final summary
+ */
+function hideTimeline() {
+  const timelineSection = document.getElementById('timeline-section');
+  if (timelineSection) {
     timelineSection.classList.remove('visible');
     
     // Add a small delay before hiding completely
@@ -621,108 +628,4 @@ document.addEventListener('DOMContentLoaded', function() {
       finalSummarySection.classList.add('visible');
     }, 300);
   }
-  
-  /**
-   * Shows a specific phase in the timeline
-   * @param {string} phase - The phase to show ('planning', 'development', 'integration', or 'delivery')
-   */
-  function showPhase(phase) {
-    // Update phase tabs
-    document.querySelectorAll('.phase').forEach(tab => {
-      tab.classList.remove('active');
-    });
-    document.querySelector(`.phase[data-phase="${phase}"]`).classList.add('active');
-    
-    // Update phase content
-    document.querySelectorAll('.phase-content').forEach(content => {
-      content.classList.remove('active');
-    });
-    
-    const contentId = `${phase}-content`;
-    document.getElementById(contentId).classList.add('active');
-    
-    // Update progress indicator
-    let progressWidth = 0;
-    switch (phase) {
-      case 'planning': progressWidth = 25; break;
-      case 'development': progressWidth = 50; break;
-      case 'integration': progressWidth = 75; break;
-      case 'delivery': progressWidth = 100; break;
-    }
-    
-    document.querySelector('.progress-indicator').style.width = `${progressWidth}%`;
-  }
-  
-  /**
-   * Updates the timeline content based on selected features
-   */
-  function updateTimelineFeatures() {
-    // Get feature values
-    const fdpSessions = parseInt(document.getElementById('fdp-sessions').value);
-    const videoCount = parseInt(document.getElementById('tutorial-videos').value);
-    const supportMonths = parseInt(document.getElementById('support-months').value);
-    const aiIntegration = document.getElementById('ai-integration').checked;
-    
-    // Update faculty development program items
-    const fdpElements = document.querySelectorAll('.faculty-item');
-    if (fdpSessions > 0) {
-      fdpElements.forEach(element => {
-        element.style.display = 'flex';
-      });
-      
-      // Update all FDP count spans
-      document.querySelectorAll('#fdp-count, #fdp-plan-count, #fdp-train-count, #fdp-delivery-count').forEach(span => {
-        span.textContent = fdpSessions;
-      });
-    } else {
-      fdpElements.forEach(element => {
-        element.style.display = 'none';
-      });
-    }
-    
-    // Update video tutorial items
-    const videoElements = document.querySelectorAll('.video-item');
-    if (videoCount > 0) {
-      videoElements.forEach(element => {
-        element.style.display = 'flex';
-      });
-      
-      // Update all video count spans
-      document.querySelectorAll('#video-count, #video-deliv-count').forEach(span => {
-        span.textContent = videoCount;
-      });
-    } else {
-      videoElements.forEach(element => {
-        element.style.display = 'none';
-      });
-    }
-    
-    // Update support items
-    const supportElements = document.querySelectorAll('.support-item');
-    if (supportMonths > 0) {
-      supportElements.forEach(element => {
-        element.style.display = 'flex';
-      });
-      
-      // Update all support count spans
-      document.querySelectorAll('#support-count, #support-term-count, #support-final-count').forEach(span => {
-        span.textContent = supportMonths;
-      });
-    } else {
-      supportElements.forEach(element => {
-        element.style.display = 'none';
-      });
-    }
-    
-    // Update AI integration items
-    const aiElements = document.querySelectorAll('.ai-item');
-    if (aiIntegration) {
-      aiElements.forEach(element => {
-        element.style.display = 'flex';
-      });
-    } else {
-      aiElements.forEach(element => {
-        element.style.display = 'none';
-      });
-    }
-  }
+}
