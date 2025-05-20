@@ -750,3 +750,30 @@ input:checked + .toggle-slider:before {
         flex-direction: column;
     }
 }
+
+/* Timeline Button Styles (add to your existing CSS) */
+.view-timeline-btn {
+    background-color: #0071e3;
+    color: white;
+    padding: 14px 20px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+  
+  .view-timeline-btn svg {
+    margin-right: 8px;
+  }
+  
+  .view-timeline-btn:hover {
+    background-color: #3b82f6;
+    transform: translateY(-2px);
+  }
